@@ -27,11 +27,24 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run start -- -H 127.0.0.1 -p 3000",
+    // 0.0.0.0 so the local database container can reach the app (its webhook).
+    command: "npm run start -- -H 0.0.0.0 -p 3000",
     url: `${BASE}/sign-in`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     // The local stack's keys win over anything in the shell.
-    env: { ...local, NODE_ENV: "production" },
+    env: {
+      ...local,
+      NODE_ENV: "production",
+      // Fibery and the routine endpoint are stubbed by e2e/stub-server.ts. Test values only.
+      FIBERY_TOKEN: "e2e-fibery-token",
+      FIBERY_WORKSPACE: "stub",
+      FIBERY_BASE_URL: "http://127.0.0.1:4010",
+      FIBERY_WIKI_PAGE_ID: "00000000-0000-4000-8000-000000000061",
+      FIBERY_VOYAGE_ID: "00000000-0000-4000-8000-000000000126",
+      FIBERY_OWNER_USER_ID: "00000000-0000-4000-8000-000000000001",
+      AG095_FIRE_URL: "http://127.0.0.1:4010/fire",
+      AG095_FIRE_TOKEN: "e2e-routine-token",
+    },
   },
 });
