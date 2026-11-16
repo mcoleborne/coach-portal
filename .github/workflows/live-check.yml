@@ -1,0 +1,37 @@
+name: Live check
+
+# Limb (7): runs the scope's acceptance checks on the production URL as the
+# test guest and checks every intake event reaches Fibery within two minutes.
+# Run by hand once the secrets below are placed. Writes only to the test
+# engagement, on cards it publishes.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      LIVE_URL: https://coach-portal-coleborneco.vercel.app
+      NEXT_PUBLIC_SUPABASE_URL: https://ljseflgfzyjzjbnldern.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      LIVE_GUEST_EMAIL: ${{ secrets.LIVE_GUEST_EMAIL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Check the secrets are placed (names only)
+        run: |
+          for n in SUPABASE_SERVICE_ROLE_KEY LIVE_GUEST_EMAIL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY; do
+            if [ -z "${!n}" ]; then echo "Missing: $n"; exit 1; fi
+          done
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test -c playwright.live.config.ts

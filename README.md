@@ -117,3 +117,11 @@ At most one email a day per engagement, to the coach, when cards were published 
 
 Sign-in links are sent by Supabase Auth, not by the digest provider. Supabase's built-in email only delivers to members of the Supabase organisation and is rate limited. Before inviting anyone outside it, set custom SMTP in Supabase (Authentication, Emails, SMTP settings), for example with the same provider.
 
+## Live check (Done When limb 7)
+
+`.github/workflows/live-check.yml` runs the scope's acceptance checks on the production URL as the test guest. It is started by hand from the Actions tab. It mints the guest's sign-in link with the service key, so it needs no inbox. It publishes its own sample cards in the test engagement, performs every coach act (answer with an attachment, comment, voice note, question back, upload, raised item), and fails unless each act's intake event is filed to Fibery within two minutes, with a Horizon for the question back.
+
+It needs, in the repository settings: secret `SUPABASE_SERVICE_ROLE_KEY`, secret `LIVE_GUEST_EMAIL` (the test guest's address), and variable `SUPABASE_PUBLISHABLE_KEY`. Vercel needs the service key and the Fibery settings for the filing to succeed.
+
+Seed the test engagement with `scripts/seed-test-engagement.sql` (see the header for the two email variables). It sends no email and is safe to run twice.
+
