@@ -63,7 +63,7 @@ export function ThisWeek({ ctx, week }: { ctx: PortalContext; week: Week }) {
           <span className="text-sm font-bold">Actions from last session</span>
           {last.summary_md ? (
             <details>
-              <summary className="link-target cursor-pointer text-sm">Read the summary of session {last.number ?? ""}</summary>
+              <summary className="link-target cursor-pointer text-sm text-accent underline">Read the summary of session {last.number ?? ""}</summary>
               <Markdown>{last.summary_md}</Markdown>
             </details>
           ) : null}

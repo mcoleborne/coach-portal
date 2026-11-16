@@ -34,7 +34,7 @@ export function ReviewQueue({
   return (
     <section className="panel flex flex-col gap-4" aria-labelledby="queue-title">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 id="queue-title" className="panel-title">
+        <h2 id="queue-title" className="panel-title whitespace-nowrap">
           Review queue
         </h2>
         <nav aria-label="Filter by status" className="flex flex-wrap gap-2 text-sm">
@@ -68,7 +68,7 @@ export function ReviewQueue({
             <li key={card.id}>
               <Link
                 href={`/cards/${card.id}`}
-                className="flex items-center gap-4 rounded-md border border-line p-4 text-ink no-underline hover:bg-bg hover:text-ink"
+                className="flex flex-col-reverse items-start gap-2 rounded-md border border-line p-4 text-ink no-underline hover:bg-bg hover:text-ink sm:flex-row sm:items-center sm:gap-4"
               >
                 <div className="flex min-w-0 grow flex-col gap-1">
                   <span className="font-bold">{card.title}</span>

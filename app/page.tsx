@@ -46,6 +46,15 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <AddMaterial engagementId={ctx.engagement.id} />
             <span className="muted">Menus you like, supplier lists, walkthroughs and voice notes.</span>
           </section>
+          <section className="panel flex flex-col gap-3" aria-labelledby="raise-title">
+            <h2 id="raise-title" className="panel-title">
+              Spotted something?
+            </h2>
+            <span className="text-sm text-muted">A risk, a supplier tip or an idea. It reaches Claude straight away.</span>
+            <Link href="/raise" className="btn-primary self-start">
+              Raise something
+            </Link>
+          </section>
           <RecentDecisions decisions={week.decisions} sessions={week.sessions} />
         </div>
       </main>
