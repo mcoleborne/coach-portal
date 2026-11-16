@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { adminClient, seedEngagement, signedInClient, type Seeded } from "../support/fixtures";
+import { adminClient, anonClient, seedEngagement, signedInClient, type Seeded } from "../support/fixtures";
 
 // Every table in the public schema that carries engagement data.
 const TABLES = [
@@ -107,5 +107,28 @@ describe("row-level security: a second guest cannot read the first guest's rows"
     expect(signed.data?.signedUrl ?? null).toBeNull();
     const write = await guestB.storage.from("uploads").upload(`${a.engagementId}/rls/intruder.txt`, new Blob(["x"]));
     expect(write.error).not.toBeNull();
+  });
+
+  it("a caller who is not signed in can call no function and read no table", async () => {
+    const anon = anonClient();
+    const calls: [string, Record<string, unknown>][] = [
+      ["is_member", { eid: a.engagementId }],
+      ["member_role_of", { eid: a.engagementId }],
+      ["mark_card_opened", { p_card_id: a.cardIds[0] }],
+      ["record_consent", { p_engagement: a.engagementId, p_consent: true }],
+      ["tick_action", { p_action_id: a.coachActionId }],
+      ["request_reschedule", { p_session_id: a.sessionIds.next, p_note: "x" }],
+      ["submit_answer", { p_card_id: a.cardIds[0], p_option_key: "A", p_reasoning: "x" }],
+      ["claim_intake_events", { p_limit: 1 }],
+      ["on_answer_insert", {}],
+    ];
+    for (const [fn, args] of calls) {
+      const { error } = await anon.rpc(fn, args);
+      expect(error, fn).not.toBeNull();
+    }
+    for (const t of TABLES) {
+      const { data } = await anon.from(t).select("engagement_id");
+      expect(data ?? [], t).toEqual([]);
+    }
   });
 });

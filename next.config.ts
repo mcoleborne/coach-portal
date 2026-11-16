@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfkit"],
+  // pdfkit reads its standard font metrics from disk at runtime.
+  outputFileTracingIncludes: { "/cards/[id]/document.pdf": ["./node_modules/pdfkit/js/data/**"] },
   experimental: {
     serverActions: { bodySizeLimit: "2mb" },
   },

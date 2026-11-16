@@ -44,6 +44,9 @@ export async function signInDirect(page: Page, email: string, opts: { answerCons
   if (error || !data.properties?.action_link) throw new Error(`generateLink failed: ${error?.message}`);
   await page.goto(data.properties.action_link);
   await page.waitForURL((u) => !u.pathname.startsWith("/auth/"), { timeout: 20_000 });
+  // Home may redirect again to the one-time consent question.
+  await page.waitForLoadState("networkidle");
+  await page.locator("main").first().waitFor();
   if (opts.answerConsent !== false && page.url().includes("/consent")) {
     await page.getByRole("button", { name: "Continue" }).click();
     await page.waitForURL((u) => !u.pathname.startsWith("/consent"));
