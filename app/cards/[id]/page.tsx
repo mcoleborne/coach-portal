@@ -1,6 +1,11 @@
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { AddMaterial } from "@/components/add-material";
 import { AnswerForm } from "@/components/card/answer-form";
+import { CommentThread } from "@/components/card/comment-thread";
+import { UploadGrid } from "@/components/upload-grid";
+import { signPaths } from "@/lib/storage/signed";
+import type { Upload } from "@/lib/types";
 import { DocumentPanel } from "@/components/card/document-panel";
 import { Markdown } from "@/components/markdown";
 import { StatusPill } from "@/components/status-pill";
@@ -25,7 +30,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
     if (!error) card.opened_at = new Date().toISOString();
   }
 
-  const [names, { data: answers }, { data: events }] = await Promise.all([
+  const [names, { data: answers }, { data: events }, { data: comments }, { data: uploads }] = await Promise.all([
     memberNames(supabase, ctx.engagement.id),
     supabase
       .from("answers")
@@ -38,7 +43,26 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
       .eq("engagement_id", ctx.engagement.id)
       .in("kind", ["answer", "question_back"])
       .not("filed_at", "is", null),
+    supabase
+      .from("comments")
+      .select("id, author_id, author_kind, is_question_back, body_md, created_at")
+      .eq("card_id", card.id)
+      .order("created_at", { ascending: true }),
+    supabase.from("uploads").select("*").eq("card_id", card.id).order("created_at", { ascending: false }),
   ]);
+  const cardUploads = (uploads ?? []) as Upload[];
+  const urls = await signPaths(
+    supabase,
+    cardUploads.map((u) => u.storage_path),
+  );
+  const thread = (comments ?? []).map((c) => ({
+    id: c.id as string,
+    author:
+      c.author_kind === "claude" ? `Claude for ${ctx.ownerName}` : (names[c.author_id as string] ?? "Someone"),
+    when: formatSydneyDateTime(new Date(c.created_at as string)),
+    body: c.body_md as string,
+    isQuestionBack: c.is_question_back as boolean,
+  }));
 
   const latest = answers?.[0];
   const optionLabel = (key: string) =>
@@ -129,6 +153,16 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
         </div>
 
         <aside className="flex min-w-0 flex-col gap-5">
+          <section className="panel flex flex-col gap-3" aria-labelledby="attachments-title">
+            <div className="flex items-start justify-between gap-2">
+              <h2 id="attachments-title" className="m-0 text-base font-bold">
+                Attachments
+              </h2>
+              <AddMaterial engagementId={ctx.engagement.id} cardId={card.id} variant="button" />
+            </div>
+            <UploadGrid uploads={cardUploads} urls={urls} names={names} columns="grid-cols-2" empty="None yet." />
+          </section>
+          <CommentThread cardId={card.id} comments={thread} />
           <section className="panel flex flex-col gap-2 text-sm" aria-labelledby="activity-title">
             <h2 id="activity-title" className="m-0 text-base font-bold">
               Activity
