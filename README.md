@@ -23,9 +23,9 @@ npm run dev
 
 | Command | What it proves |
 |---|---|
-| `npm test` | Unit: Sydney date helper (pinned clocks either side of midnight in AEDT and AEST, both DST changes), hours meter, digest rule |
-| `npm run test:integration` | Against the local stack: row-level security on every table and on storage, one intake row per coach act, filing with a stubbed Fibery (success, failure and retry, concurrent filers, routine debounce), the Fibery request shapes, Claude's write path |
-| `npm run test:e2e` | Playwright on desktop (1280) and phone (390): sign-in by emailed link, cards and answers, comments and uploads, and the full intake path (act, database webhook, filing route, stub Fibery, routine fire) |
+| `npm test` | Unit: Sydney date helper (pinned clocks either side of midnight in AEDT and AEST, both DST changes), hours meter across tiers and the late-cancellation rule, the digest once-a-day rule |
+| `npm run test:integration` | Against the local stack: row-level security on every table and on storage, one intake row per coach act, filing with a stubbed Fibery (success, failure and retry, concurrent filers, routine debounce), the Fibery request shapes, Claude's write path, the digest (once a day, Sydney date, failure and retry, concurrent calls, allow-list) |
+| `npm run test:e2e` | Playwright on desktop (1280) and phone (390): sign-in by emailed link, cards and answers, comments and uploads, the full intake path (act, database webhook, filing route, stub Fibery, routine fire), this week, hours, the decision log, raise something, the empty queue, and a phone pass over every screen at 390px with 44px touch targets |
 | `npm run check:dashes` | No em dash in any tracked file |
 
 Tests refuse to run unless `NEXT_PUBLIC_SUPABASE_URL` points at 127.0.0.1, so they can never touch a real project.
@@ -47,6 +47,10 @@ Tests refuse to run unless `NEXT_PUBLIC_SUPABASE_URL` points at 127.0.0.1, so th
 | `AG095_FIRE_URL` | Vercel. The AG-095 routine's fire URL | No |
 | `AG095_FIRE_TOKEN` | Vercel, server only. The AG-095 routine's API trigger token | Yes |
 | `APP_URL` | Vercel, optional. Public base URL for links in Fibery and email | No |
+| `RESEND_API_KEY` | Vercel, server only. The digest's email provider | Yes |
+| `DIGEST_FROM` | Vercel. A sender on a domain verified with the provider, for example `Coach portal <portal@example.com>` | No |
+| `DIGEST_REPLY_TO` | Vercel. Matt's address, so replies to the digest reach his inbox | No |
+| `DIGEST_ALLOWED_RECIPIENTS` | Vercel, optional. Comma-separated. When set, only these addresses get a digest | No |
 
 Database settings live in `public.app_config` (service role only):
 
@@ -106,4 +110,10 @@ One shared contract, not one path per screen.
 | `PATCH /api/claude/intake-events/:id` | `{ judged: true }` | Marks an event judged |
 
 Claude can also read and write the portal directly through the Supabase connector, as the service role.
+
+## Digest
+
+At most one email a day per engagement, to the coach, when cards were published since the last digest. It links straight into the app, and its reply-to is `DIGEST_REPLY_TO`. `pg_cron` calls `/api/digest` at 20:30 and 21:30 UTC, which is 7:30am in Sydney under AEDT and under AEST. The route sends only inside the 7:30 to 9:00am Sydney window. The `digest_log` row for the Sydney date is claimed before sending, so a second call that day sends nothing. If the send fails, the row is removed and a later call can try again.
+
+Sign-in links are sent by Supabase Auth, not by the digest provider. Supabase's built-in email only delivers to members of the Supabase organisation and is rate limited. Before inviting anyone outside it, set custom SMTP in Supabase (Authentication, Emails, SMTP settings), for example with the same provider.
 
