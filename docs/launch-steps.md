@@ -71,5 +71,5 @@ The check writes sample rows to the test engagement, a few dated lines to Club d
 
 ## Do not
 
-- Invite Frank or send him a sign-in link. That waits until the live check passes and Matt says go.
+- Invite Frank or send Frank a sign-in link. That waits until the live check passes and Matt says go.
 - Change `DIGEST_ALLOWED_RECIPIENTS` until Matt says go for Frank. It is what stops a digest reaching anyone but the test guest.
