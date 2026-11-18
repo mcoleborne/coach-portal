@@ -51,7 +51,7 @@ Tests refuse to run unless `NEXT_PUBLIC_SUPABASE_URL` points at 127.0.0.1, so th
 | `APP_URL` | Vercel, optional. Public base URL for links in Fibery and email | No |
 | `RESEND_API_KEY` | Vercel, server only. The digest's email provider | Yes |
 | `DIGEST_FROM` | Vercel. A sender on a domain verified with the provider, for example `Coach portal <portal@example.com>` | No |
-| `DIGEST_REPLY_TO` | Vercel. Matt's address, so replies to the digest reach his inbox | No |
+| `DIGEST_REPLY_TO` | Vercel. Matt's address, so replies to the digest reach Matt's inbox | No |
 | `DIGEST_ALLOWED_RECIPIENTS` | Vercel, optional. Comma-separated. When set, only these addresses get a digest | No |
 
 Database settings live in `public.app_config` (service role only):
